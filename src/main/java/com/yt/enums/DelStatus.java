@@ -6,13 +6,13 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum DelStatus {
-    NORMAL(10, "正常"),
+    NOT_DELETE(10, "未删除"),
     DELETE(5, "已删除");
     private final Integer code;
     private final String desc;
 
-    public static Integer getNormal() {
-        return NORMAL.code;
+    public static Integer getNotDelete() {
+        return NOT_DELETE.code;
     }
 
     public static Integer getDelete() {
@@ -23,7 +23,7 @@ public enum DelStatus {
         return DELETE.code.equals(code);
     }
 
-    public static boolean isNormal(Integer code) {
-        return NORMAL.code.equals(code);
+    public static boolean isNotDelete(Integer code) {
+        return NOT_DELETE.code.equals(code);
     }
 }
