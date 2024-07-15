@@ -18,6 +18,13 @@ public abstract class MyCollUtil {
         return result;
     }
 
+    public static <K, V> Map<K, List<V>> groupBy(Collection<V> coll, Function<V, K> keyFunc) {
+        if (CollUtil.isEmpty(coll)) {
+            return new HashMap<>();
+        }
+        return coll.stream().collect(Collectors.groupingBy(keyFunc, Collectors.toList()));
+    }
+
     public static <K, V, E> Map<K, V> toMap(Collection<E> coll, Func1<E, K> keyFunc, Func1<E, V> valueFunc) {
         if (CollUtil.isEmpty(coll)) {
             return new HashMap<>();

@@ -1,4 +1,4 @@
-package com.yt.common.resp;
+package com.yt.web.resp;
 
 import cn.hutool.core.util.StrUtil;
 import io.swagger.annotations.ApiModel;

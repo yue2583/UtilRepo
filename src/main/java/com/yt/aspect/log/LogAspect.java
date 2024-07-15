@@ -21,8 +21,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import static com.yt.aspect.log.LogMethodArgsAndResult.Condition;
-import static com.yt.aspect.log.LogMethodArgsAndResult.Condition.*;
+import static com.yt.aspect.log.MethodLog.Condition;
+import static com.yt.aspect.log.MethodLog.Condition.*;
 
 @Slf4j
 @Aspect
@@ -33,7 +33,7 @@ public class LogAspect implements ApplicationContextAware {
     private LogMethodArgsAndResultProperties properties;
     private ApplicationContext applicationContext;
 
-    @Pointcut("@annotation(com.yt.aspect.log.LogMethodArgsAndResult)")
+    @Pointcut("@annotation(com.yt.aspect.log.MethodLog)")
     public void pointcut() {
     }
 
@@ -49,7 +49,7 @@ public class LogAspect implements ApplicationContextAware {
     }
 
     private void recordArgsAndResult(ProceedingJoinPoint joinPoint, Object result) {
-        LogMethodArgsAndResult anno = ReflectUtils.getAnnotation(joinPoint, LogMethodArgsAndResult.class);
+        MethodLog anno = ReflectUtils.getAnnotation(joinPoint, MethodLog.class);
         boolean needLog = false;
         Set<Condition> conditions = new HashSet<>(Arrays.asList(anno.conditions()));
         if (conditions.contains(RESULT_IS_NULL)) {
@@ -84,7 +84,7 @@ public class LogAspect implements ApplicationContextAware {
         }
     }
 
-    private boolean isInKeys(LogMethodArgsAndResult anno, ProceedingJoinPoint joinPoint) {
+    private boolean isInKeys(MethodLog anno, ProceedingJoinPoint joinPoint) {
         try {
             return properties.inKeys(tryGetFromArgs(anno, joinPoint));
         } catch (Exception e) {
@@ -93,7 +93,7 @@ public class LogAspect implements ApplicationContextAware {
         return false;
     }
 
-    private Object tryGetFromArgs(LogMethodArgsAndResult anno, ProceedingJoinPoint joinPoint) throws Exception {
+    private Object tryGetFromArgs(MethodLog anno, ProceedingJoinPoint joinPoint) throws Exception {
         Object keyArg = joinPoint.getArgs()[anno.keyArgsIndex()];
         if (keyArg == null) {
             return null;
@@ -105,7 +105,7 @@ public class LogAspect implements ApplicationContextAware {
         return getFromSelfOrField(anno, keyArg);
     }
 
-    private Object getFromSelfOrField(LogMethodArgsAndResult anno, Object keyArg) throws Exception {
+    private Object getFromSelfOrField(MethodLog anno, Object keyArg) throws Exception {
         if (keyArg instanceof Number) {
             return keyArg;
         }
@@ -116,7 +116,7 @@ public class LogAspect implements ApplicationContextAware {
 
     }
 
-    private Method getParseKeyMethod(LogMethodArgsAndResult anno, ProceedingJoinPoint joinPoint, Class<?> keyArgClass) throws NoSuchMethodException {
+    private Method getParseKeyMethod(MethodLog anno, ProceedingJoinPoint joinPoint, Class<?> keyArgClass) throws NoSuchMethodException {
         if (StrUtil.isBlank(anno.parseKeyMethodName())) {
             return null;
         }

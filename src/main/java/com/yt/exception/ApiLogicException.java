@@ -1,7 +1,7 @@
 package com.yt.exception;
 
 
-import com.yt.common.resp.ErrorCode;
+import com.yt.web.resp.ErrorCode;
 
 import java.io.Serializable;
 

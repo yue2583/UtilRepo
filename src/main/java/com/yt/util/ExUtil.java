@@ -11,15 +11,11 @@ public class ExUtil {
         throw new ApiLogicException(StrUtil.format("{}:{}", msg, obj));
     }
 
-    public static void invalidParam(Object param) {
-        exDetail(param, "非法参数");
-    }
-
-    public static void invalidMultiParam(Object... params) {
-        invalidParam(StrUtil.join("\n", params));
+    public static void invalidParam(Object... params) {
+        exDetail(StrUtil.join("\n", params), "非法参数");
     }
 
     public static void invalidNullParam() {
-        invalidParam(null);
+        invalidParam(new Object[]{null});
     }
 }

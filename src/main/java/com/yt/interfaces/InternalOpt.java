@@ -1,4 +1,4 @@
-package com.yt.common;
+package com.yt.interfaces;
 
 
 import com.yt.util.ExUtil;

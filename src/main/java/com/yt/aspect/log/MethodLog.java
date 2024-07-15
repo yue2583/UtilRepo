@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface LogMethodArgsAndResult {
+public @interface MethodLog {
 
     /**
      * 打印日志需要满足的条件

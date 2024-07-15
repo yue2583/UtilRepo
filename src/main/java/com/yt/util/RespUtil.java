@@ -1,6 +1,6 @@
 package com.yt.util;
 
-import com.yt.common.resp.ApiResponse;
+import com.yt.web.resp.ApiResponse;
 
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -1,4 +1,4 @@
-package com.yt.common.resp;
+package com.yt.web.resp;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
