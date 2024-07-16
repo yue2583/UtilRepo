@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ExUtil {
 
     public static void exDetail(Object obj, String msg) {
-        throw new ApiLogicException(StrUtil.format("{}:{}", msg, obj));
+        ex(StrUtil.format("{}:{}", msg, obj));
     }
 
     public static void exNull() {
@@ -21,6 +21,11 @@ public class ExUtil {
 
     public static void invalidParam(Object... params) {
         exDetail(StrUtil.join("\n", params), "非法参数");
+    }
+
+
+    public static void ex(String msg) {
+        throw new ApiLogicException(msg);
     }
 
     public static void invalidNullParam() {
