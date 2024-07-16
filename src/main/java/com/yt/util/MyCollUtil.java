@@ -36,6 +36,10 @@ public abstract class MyCollUtil {
         return new HashMap<>(size);
     }
 
+    public static <T, R> Set<R> toSet(List<T> data, Function<T, R> mapper) {
+        return new HashSet<>(CollUtil.map(data, mapper, true));
+    }
+
     public static <K, V> Map<K, V> defaultMap(Collection<?> coll) {
         return new HashMap<>(coll.size());
     }
