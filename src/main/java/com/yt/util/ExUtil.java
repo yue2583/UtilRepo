@@ -11,6 +11,14 @@ public class ExUtil {
         throw new ApiLogicException(StrUtil.format("{}:{}", msg, obj));
     }
 
+    public static void exNull() {
+        exNull("参数不能为null");
+    }
+
+    public static void exNull(String msg) {
+        exDetail(null, msg);
+    }
+
     public static void invalidParam(Object... params) {
         exDetail(StrUtil.join("\n", params), "非法参数");
     }
