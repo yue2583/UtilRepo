@@ -5,6 +5,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * 打印方法相关日志
+ * 具体包括：耗时，入参，返回值
+ * 可配置总开关，默认关闭：yt-method-log.enable=true
+ * 可配置条件开关：指定uid，指定返回值，指定耗时阈值
+ */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface MethodLog {
