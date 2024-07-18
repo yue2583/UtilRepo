@@ -7,9 +7,11 @@ import java.lang.annotation.Target;
 
 /**
  * <p>打印方法相关日志</p>
- * <p>具体包括：耗时，入参，返回值，异常信息</p>
+ * <p>具体包括：时间，入参，返回值，异常信息</p>
  * <p>另有配置见 {@code MethodLogProperties}</p>
- * <p>不支持多线程</p>
+ * <br>注意：
+ * 不支持多线程
+ * 基于spring AOP，因此需要注入容器且方法为public
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

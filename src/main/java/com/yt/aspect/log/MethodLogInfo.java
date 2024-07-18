@@ -47,7 +47,7 @@ public class MethodLogInfo {
             return;
         }
         log.info(title() + NEXT_LINE +
-                cost() + NEXT_LINE +
+                time() + NEXT_LINE +
                 args() + NEXT_LINE +
                 result() + NEXT_LINE +
                 throwable()
@@ -62,8 +62,8 @@ public class MethodLogInfo {
         return StrUtil.format("异常：{}", LogUtil.logThrowable(throwable));
     }
 
-    private String cost() {
-        return StrUtil.format("耗时：{}ms", costMills());
+    private String time() {
+        return StrUtil.format("耗时：{}ms     开始时间：{} 结束时间：{}", costMills(), startTime, endTime);
     }
 
     private String args() {
