@@ -1,7 +1,7 @@
 package com.yt.aspect.log;
 
 
-import com.yt.util.ReflectionUtils;
+import com.yt.util.ReflectionUtil;
 import lombok.AllArgsConstructor;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -108,11 +108,11 @@ public class LogAspect {
     }
 
     private MethodLog getAnno(ProceedingJoinPoint joinPoint) {
-        return ReflectionUtils.getAnno(joinPoint, MethodLog.class);
+        return ReflectionUtil.getAnno(joinPoint, MethodLog.class);
     }
 
     private Method getMethod(ProceedingJoinPoint joinPoint) {
-        return ReflectionUtils.getMethod(joinPoint);
+        return ReflectionUtil.getMethod(joinPoint);
     }
 
     private static class ResultAndThrowable {

@@ -1,7 +1,7 @@
 package com.yt.aspect.trycatch;
 
 
-import com.yt.util.ReflectionUtils;
+import com.yt.util.ReflectionUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -31,7 +31,7 @@ public class TryCatchAspect {
     }
 
     private void logDetails(ProceedingJoinPoint joinPoint, Exception e) {
-        Method method = ReflectionUtils.getMethod(joinPoint);
+        Method method = ReflectionUtil.getMethod(joinPoint);
         log.error("TryCatchAspect\n" +
                         "class:{}\n" +
                         "method:{}\n" +

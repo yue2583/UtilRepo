@@ -5,7 +5,7 @@ import com.yt.exception.ApiLogicException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ExUtil {
+public abstract class ExUtil {
 
     public static void exDetail(Object obj, String msg) {
         ex(StrUtil.format("{}:{}", msg, obj));

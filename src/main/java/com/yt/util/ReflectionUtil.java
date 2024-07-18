@@ -8,7 +8,7 @@ import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
-public abstract class ReflectionUtils {
+public abstract class ReflectionUtil {
 
     public static <T extends Annotation> T getAnno(ProceedingJoinPoint joinPoint, Class<T> annoClass) {
         return getMethod(joinPoint).getAnnotation(annoClass);

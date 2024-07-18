@@ -8,7 +8,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Objects;
 
-public class CheckUtil {
+public abstract class CheckUtil {
 
     public static void notNull(Object obj, String msg) {
         if (obj == null) {
@@ -26,7 +26,7 @@ public class CheckUtil {
 
     public static void noNull(Object... obj) {
        if (anyNull(obj)) {
-           ExUtil.invalidMultiParam(obj);
+           ExUtil.invalidParam(obj);
        }
     }
 

@@ -2,12 +2,11 @@ package com.yt.aspect.log;
 
 import cn.hutool.core.util.StrUtil;
 import com.google.gson.Gson;
+import com.yt.util.LogUtil;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Data
@@ -60,15 +59,7 @@ public class MethodLogInfo {
     }
 
     private String throwable() {
-        String throwableMsg = throwable.getMessage() + NEXT_LINE + formatStackTrace(throwable.getStackTrace());
-        return StrUtil.format("异常：{}", throwableMsg);
-    }
-
-    private CharSequence formatStackTrace(StackTraceElement[] stackTrace) {
-        if (stackTrace == null) {
-            return "";
-        }
-        return Arrays.stream(stackTrace).map(StackTraceElement::toString).collect(Collectors.joining(NEXT_LINE));
+        return StrUtil.format("异常：{}", LogUtil.logThrowable(throwable));
     }
 
     private String cost() {
