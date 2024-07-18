@@ -8,9 +8,9 @@ import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
-public class ReflectUtils {
+public abstract class ReflectionUtils {
 
-    public static <T extends Annotation> T getAnnotation(ProceedingJoinPoint joinPoint, Class<T> annoClass) {
+    public static <T extends Annotation> T getAnno(ProceedingJoinPoint joinPoint, Class<T> annoClass) {
         return getMethod(joinPoint).getAnnotation(annoClass);
     }
 
@@ -32,7 +32,7 @@ public class ReflectUtils {
 
     public static Object getFieldValue(Object obj, String fieldName) throws Exception {
         Field field = obj.getClass().getDeclaredField(fieldName);
-        ReflectUtils.setAccessible(field);
+        setAccessible(field);
         return field.get(obj);
     }
 }

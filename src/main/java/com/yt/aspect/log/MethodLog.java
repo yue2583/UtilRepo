@@ -6,39 +6,76 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 打印方法相关日志
- * 具体包括：耗时，入参，返回值
- * 可配置总开关，默认关闭：yt-method-log.enable=true
- * 可配置条件开关：指定uid，指定返回值，指定耗时阈值
+ * <p>打印方法相关日志</p>
+ * <p>具体包括：耗时，入参，返回值，异常信息</p>
+ * <p>另有配置见 {@code MethodLogProperties}</p>
+ * <p>不支持多线程</p>
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface MethodLog {
 
     /**
-     * 打印日志需要满足的条件
-     * 除了指定特定的条件外，还可以完全自定义，通过调用{@link LogThreadLocal#doLog()}来要求打印日志
-     * 注意{@link LogThreadLocal#doLog()}的效果一旦被判定会立刻失效{@link LogAspect}
+     * 指定返回值满足什么条件时打印日志
      */
-    Condition[] conditions() default {};
+    ResultCondition resultCondition() default ResultCondition.NO;
 
-    int keyArgsIndex() default 0;
+    /**
+     * 指定耗时毫秒阈值，超过阈值时打印日志
+     */
+    long costMillsThreshold() default Long.MAX_VALUE;
 
-    String keyName() default "uid";
+    /**
+     * 指定当方法执行抛出异常时打印日志
+     */
+    boolean logWhenException() default false;
 
-    String parseKeyMethodName() default "";
-
-    enum Condition {
-        RESULT_IS_NULL,
-        RESULT_IS_TRUE,
-        RESULT_IS_FALSE,
+    enum ResultCondition {
         /**
-         * 配合 keyArgsIndex, keyName, parseKeyMethodName 使用
-         * 如果未指定 parseKeyMethodName，依次尝试获取指定参数本身，指定参数中的某个字段作为key
-         * 如果指定了 parseKeyMethodName，使用方法获取key
+         * 任何返回值都不打印
          */
-        ARGS_HIT_KEY,
-        ALL,
+        NO,
+        /**
+         * 任何返回值都打印
+         */
+        ANY,
+        /**
+         * 返回值为null时打印
+         */
+        NULL,
+        TRUE,
+        FALSE,
+        NOT_NULL,
+        NOT_TRUE,
+        NOT_FALSE,
         ;
+
+        public boolean match(Object result) {
+            if (this == NO) {
+                return false;
+            }
+            if (this == ANY) {
+                return true;
+            }
+            if (this == NULL) {
+                return result == null;
+            }
+            if (this == TRUE) {
+                return Boolean.TRUE.equals(result);
+            }
+            if (this == FALSE) {
+                return Boolean.FALSE.equals(result);
+            }
+            if (this == NOT_NULL) {
+                return result != null;
+            }
+            if (this == NOT_TRUE) {
+                return !Boolean.TRUE.equals(result);
+            }
+            if (this == NOT_FALSE) {
+                return !Boolean.FALSE.equals(result);
+            }
+            return false;
+        }
     }
 }

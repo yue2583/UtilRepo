@@ -1,37 +1,23 @@
 package com.yt.aspect.log;
 
 
-import cn.hutool.core.util.BooleanUtil;
-import cn.hutool.core.util.StrUtil;
-import com.sun.istack.internal.NotNull;
-import com.yt.util.ReflectUtils;
+import com.yt.util.ReflectionUtils;
 import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
-import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 
-import static com.yt.aspect.log.MethodLog.Condition;
-import static com.yt.aspect.log.MethodLog.Condition.*;
 
-@Slf4j
 @Aspect
 @Component
 @AllArgsConstructor
-public class LogAspect implements ApplicationContextAware {
+public class LogAspect {
 
-    private LogMethodArgsAndResultProperties properties;
-    private ApplicationContext applicationContext;
+    private MethodLogProperties properties;
 
     @Pointcut("@annotation(com.yt.aspect.log.MethodLog)")
     public void pointcut() {
@@ -39,95 +25,110 @@ public class LogAspect implements ApplicationContextAware {
 
     @Around("pointcut()")
     public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
-        Object result = joinPoint.proceed();
+        if (!enableBefore(joinPoint)) {
+            return joinPoint.proceed();
+        }
+
+        LogInfo logInfo = LogInfoHolder.get();
+        logInfo.enter();
+
+        recordBefore(logInfo);
+        ResultAndThrowable resultAndThrowable = tryCatchExecute(joinPoint);
+        recordAfter(joinPoint, resultAndThrowable, logInfo);
+
+        logInfo.exit();
+        LogFormatter.format(logInfo);
+
+        if (resultAndThrowable.throwable != null) {
+            throw resultAndThrowable.throwable;
+        }
+        return resultAndThrowable.result;
+    }
+
+    private ResultAndThrowable tryCatchExecute(ProceedingJoinPoint joinPoint) {
         try {
-            recordArgsAndResult(joinPoint, result);
-        } catch (Exception e) {
-            log.error("LogAspect around error", e);
-        }
-        return result;
-    }
-
-    private void recordArgsAndResult(ProceedingJoinPoint joinPoint, Object result) {
-        MethodLog anno = ReflectUtils.getAnnotation(joinPoint, MethodLog.class);
-        boolean needLog = false;
-        Set<Condition> conditions = new HashSet<>(Arrays.asList(anno.conditions()));
-        if (conditions.contains(RESULT_IS_NULL)) {
-            if (result == null) {
-                needLog = true;
-            }
-        }
-        if (conditions.contains(RESULT_IS_TRUE)) {
-            if (BooleanUtil.isTrue((Boolean) result)) {
-                needLog = true;
-            }
-        }
-        if (conditions.contains(RESULT_IS_FALSE)) {
-            if (BooleanUtil.isFalse((Boolean) result)) {
-                needLog = true;
-            }
-        }
-        if (conditions.contains(ALL)) {
-            needLog = true;
-        }
-        if (conditions.contains(ARGS_HIT_KEY)) {
-            needLog = isInKeys(anno, joinPoint);
-        }
-        if (!needLog) {
-            needLog = LogThreadLocal.isDoLog();
-            LogThreadLocal.clear();
-        }
-        if (needLog) {
-            Method method = ReflectUtils.getMethod(joinPoint);
-            log.info("LogAspect\n{}\n{}\nargs:{}\nresult:{}",
-                    method.getDeclaringClass().getSimpleName(), method.getName(), joinPoint.getArgs(), result);
+            return ResultAndThrowable.result(joinPoint.proceed());
+        } catch (Throwable t) {
+            return ResultAndThrowable.throwable(t);
         }
     }
 
-    private boolean isInKeys(MethodLog anno, ProceedingJoinPoint joinPoint) {
-        try {
-            return properties.inKeys(tryGetFromArgs(anno, joinPoint));
-        } catch (Exception e) {
-            log.error("LogAspect tryGetFromArgs error", e);
+    private void recordAfter(ProceedingJoinPoint joinPoint, ResultAndThrowable resultAndThrowable, LogInfo logInfo) {
+        MethodExecuteInfo methodExecuteInfo = logInfo.get();
+        methodExecuteInfo.end();
+        methodExecuteInfo.enable = enableAfter(getAnno(joinPoint), resultAndThrowable, methodExecuteInfo.costMills());
+        if (!methodExecuteInfo.enable) {
+            return;
         }
-        return false;
+        recordMethodExecuteInfo(joinPoint, resultAndThrowable, methodExecuteInfo);
     }
 
-    private Object tryGetFromArgs(MethodLog anno, ProceedingJoinPoint joinPoint) throws Exception {
-        Object keyArg = joinPoint.getArgs()[anno.keyArgsIndex()];
-        if (keyArg == null) {
-            return null;
-        }
-        Method parseKeyMethod = getParseKeyMethod(anno, joinPoint, keyArg.getClass());
-        if (parseKeyMethod != null) {
-            return ReflectUtils.invoke(parseKeyMethod, applicationContext.getBean(parseKeyMethod.getDeclaringClass()), keyArg);
-        }
-        return getFromSelfOrField(anno, keyArg);
+    private void recordMethodExecuteInfo(ProceedingJoinPoint joinPoint, ResultAndThrowable resultAndThrowable, MethodExecuteInfo methodExecuteInfo) {
+        Method method = getMethod(joinPoint);
+        methodExecuteInfo.clazz = method.getDeclaringClass();
+        methodExecuteInfo.method = method;
+        methodExecuteInfo.args = joinPoint.getArgs();
+        methodExecuteInfo.result = resultAndThrowable.result;
+        methodExecuteInfo.throwable = resultAndThrowable.throwable;
     }
 
-    private Object getFromSelfOrField(MethodLog anno, Object keyArg) throws Exception {
-        if (keyArg instanceof Number) {
-            return keyArg;
+    private boolean enableAfter(MethodLog methodLogAnno, ResultAndThrowable resultAndThrowable, long costMills) {
+        if (costMills > methodLogAnno.costMillsThreshold()) {
+            return true;
         }
-        if (keyArg instanceof String) {
-            return keyArg;
+        if (resultAndThrowable.throwable != null && methodLogAnno.logWhenException()) {
+            return true;
         }
-        return ReflectUtils.getFieldValue(keyArg, anno.keyName());
-
+        return methodLogAnno.resultCondition().match(resultAndThrowable.result);
     }
 
-    private Method getParseKeyMethod(MethodLog anno, ProceedingJoinPoint joinPoint, Class<?> keyArgClass) throws NoSuchMethodException {
-        if (StrUtil.isBlank(anno.parseKeyMethodName())) {
-            return null;
-        }
-        Method method = ReflectUtils.getMethod(joinPoint);
-        Class<?> clazz = method.getDeclaringClass();
-        String parseKeyMethodName = anno.parseKeyMethodName();
-        return clazz.getDeclaredMethod(parseKeyMethodName, keyArgClass);
+    private boolean enableBefore(ProceedingJoinPoint joinPoint) {
+        return mainSwitchOn() && mightHitCondition(getAnno(joinPoint));
     }
 
-    @Override
-    public void setApplicationContext(@NotNull ApplicationContext applicationContext) throws BeansException {
-        this.applicationContext = applicationContext;
+    private boolean mightHitCondition(MethodLog anno) {
+        return properties.inUids(getUid())
+                || anno.logWhenException()
+                || anno.costMillsThreshold() < Long.MAX_VALUE
+                || anno.resultCondition() != MethodLog.ResultCondition.NO;
+    }
+
+    private boolean mainSwitchOn() {
+        return properties.enable();
+    }
+
+    private Long getUid() {
+        // todo 待实现
+        return null;
+    }
+
+    private void recordBefore(LogInfo logInfo) {
+        logInfo.get().start();
+    }
+
+    private MethodLog getAnno(ProceedingJoinPoint joinPoint) {
+        return ReflectionUtils.getAnno(joinPoint, MethodLog.class);
+    }
+
+    private Method getMethod(ProceedingJoinPoint joinPoint) {
+        return ReflectionUtils.getMethod(joinPoint);
+    }
+
+    private static class ResultAndThrowable {
+        Object result;
+        Throwable throwable;
+
+        public ResultAndThrowable(Object result, Throwable throwable) {
+            this.result = result;
+            this.throwable = throwable;
+        }
+
+        public static ResultAndThrowable result(Object result) {
+            return new ResultAndThrowable(result, null);
+        }
+
+        public static ResultAndThrowable throwable(Throwable throwable) {
+            return new ResultAndThrowable(null, throwable);
+        }
     }
 }
