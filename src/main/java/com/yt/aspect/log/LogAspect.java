@@ -29,15 +29,19 @@ public class LogAspect {
             return joinPoint.proceed();
         }
 
-        LogInfo logInfo = LogInfoHolder.get();
-        logInfo.enter();
+        MethodLogInfo methodLogInfo = MethodLogInfoHolder.get();
+        try {
+            return doAround(joinPoint, methodLogInfo);
+        } finally {
+            MethodLogInfoHolder.remove();
+        }
+    }
 
-        recordBefore(logInfo);
-        ResultAndThrowable resultAndThrowable = tryCatchExecute(joinPoint);
-        recordAfter(joinPoint, resultAndThrowable, logInfo);
-
-        logInfo.exit();
-        LogFormatter.format(logInfo);
+    private Object doAround(ProceedingJoinPoint joinPoint, MethodLogInfo methodLogInfo) throws Throwable {
+        recordBefore(methodLogInfo);
+        ResultAndThrowable resultAndThrowable = execute(joinPoint);
+        recordAfter(joinPoint, resultAndThrowable, methodLogInfo);
+        methodLogInfo.log();
 
         if (resultAndThrowable.throwable != null) {
             throw resultAndThrowable.throwable;
@@ -45,7 +49,7 @@ public class LogAspect {
         return resultAndThrowable.result;
     }
 
-    private ResultAndThrowable tryCatchExecute(ProceedingJoinPoint joinPoint) {
+    private ResultAndThrowable execute(ProceedingJoinPoint joinPoint) {
         try {
             return ResultAndThrowable.result(joinPoint.proceed());
         } catch (Throwable t) {
@@ -53,23 +57,20 @@ public class LogAspect {
         }
     }
 
-    private void recordAfter(ProceedingJoinPoint joinPoint, ResultAndThrowable resultAndThrowable, LogInfo logInfo) {
-        MethodExecuteInfo methodExecuteInfo = logInfo.get();
-        methodExecuteInfo.end();
-        methodExecuteInfo.enable = enableAfter(getAnno(joinPoint), resultAndThrowable, methodExecuteInfo.costMills());
-        if (!methodExecuteInfo.enable) {
+    private void recordAfter(ProceedingJoinPoint joinPoint, ResultAndThrowable resultAndThrowable, MethodLogInfo methodLogInfo) {
+        methodLogInfo.end();
+        methodLogInfo.setEnable(enableAfter(getAnno(joinPoint), resultAndThrowable, methodLogInfo.costMills()));
+        if (!methodLogInfo.getEnable()) {
             return;
         }
-        recordMethodExecuteInfo(joinPoint, resultAndThrowable, methodExecuteInfo);
+        recordMethodExecuteInfo(joinPoint, resultAndThrowable, methodLogInfo);
     }
 
-    private void recordMethodExecuteInfo(ProceedingJoinPoint joinPoint, ResultAndThrowable resultAndThrowable, MethodExecuteInfo methodExecuteInfo) {
-        Method method = getMethod(joinPoint);
-        methodExecuteInfo.clazz = method.getDeclaringClass();
-        methodExecuteInfo.method = method;
-        methodExecuteInfo.args = joinPoint.getArgs();
-        methodExecuteInfo.result = resultAndThrowable.result;
-        methodExecuteInfo.throwable = resultAndThrowable.throwable;
+    private void recordMethodExecuteInfo(ProceedingJoinPoint joinPoint, ResultAndThrowable resultAndThrowable, MethodLogInfo methodLogInfo) {
+        methodLogInfo.setMethod(getMethod(joinPoint));
+        methodLogInfo.setArgs(joinPoint.getArgs());
+        methodLogInfo.setResult(resultAndThrowable.result);
+        methodLogInfo.setThrowable(resultAndThrowable.throwable);
     }
 
     private boolean enableAfter(MethodLog methodLogAnno, ResultAndThrowable resultAndThrowable, long costMills) {
@@ -102,8 +103,8 @@ public class LogAspect {
         return null;
     }
 
-    private void recordBefore(LogInfo logInfo) {
-        logInfo.get().start();
+    private void recordBefore(MethodLogInfo methodLogInfo) {
+        methodLogInfo.start();
     }
 
     private MethodLog getAnno(ProceedingJoinPoint joinPoint) {
