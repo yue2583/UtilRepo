@@ -72,9 +72,9 @@ public class MethodLogInfo {
 
     /**
      * 类似：
-     * ==================MethodLogInfo==================
-     * MethodLogInfo    log
-     * =================================================
+     * <br>==================MethodLogInfo==================
+     * <br>MethodLogInfo    log
+     * <br>=================================================
      */
     private String title() {
         return StrUtil.format(TITLE_TEMPLATE,
