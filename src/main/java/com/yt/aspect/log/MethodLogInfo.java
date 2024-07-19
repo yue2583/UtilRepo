@@ -7,6 +7,8 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 import static com.yt.constant.StrConstant.NEXT_LINE;
 
@@ -48,7 +50,14 @@ public class MethodLogInfo {
         if (!enable) {
             return;
         }
-        log.info(title() + time() + args() + result() + throwable());
+        log.info(NEXT_LINE + format(title() + time() + args() + result() + throwable()));
+    }
+
+    private String format(String... logs) {
+        if (logs == null || logs.length == 0) {
+            return "";
+        }
+        return Arrays.stream(logs).filter(StrUtil::isNotBlank).collect(Collectors.joining(NEXT_LINE));
     }
 
     private String result() {
@@ -63,7 +72,7 @@ public class MethodLogInfo {
     }
 
     private String time() {
-        return StrUtil.format("耗时：{}ms     开始时间：{} 结束时间：{}", costMills(), startTime, endTime) + NEXT_LINE;
+        return StrUtil.format("耗时：{}ms     开始时间：{} 结束时间：{}", costMills(), startTime, endTime);
     }
 
     private String args() {
@@ -82,7 +91,7 @@ public class MethodLogInfo {
                 method.getDeclaringClass().getSimpleName(),
                 method.getName(),
                 uid,
-                StrUtil.repeat(FILL_SYMBOL, className().length() + 2)) + NEXT_LINE;
+                StrUtil.repeat(FILL_SYMBOL, className().length() + 2));
     }
 
     private String className() {
