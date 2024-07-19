@@ -1,6 +1,7 @@
 package com.yt.aspect.log;
 
 
+import com.yt.common.ResultAndThrowable;
 import com.yt.util.ReflectionUtil;
 import lombok.AllArgsConstructor;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -17,7 +18,7 @@ import java.lang.reflect.Method;
 @AllArgsConstructor
 public class LogAspect {
 
-    private MethodLogProperties properties;
+    private final MethodLogProperties properties;
 
     @Pointcut("@annotation(com.yt.aspect.log.MethodLog)")
     public void pointcut() {
@@ -29,12 +30,7 @@ public class LogAspect {
             return joinPoint.proceed();
         }
 
-        MethodLogInfo methodLogInfo = MethodLogInfoHolder.get();
-        try {
-            return doAround(joinPoint, methodLogInfo);
-        } finally {
-            MethodLogInfoHolder.remove();
-        }
+        return doAround(joinPoint, new MethodLogInfo());
     }
 
     private Object doAround(ProceedingJoinPoint joinPoint, MethodLogInfo methodLogInfo) throws Throwable {
@@ -43,10 +39,10 @@ public class LogAspect {
         recordAfter(joinPoint, resultAndThrowable, methodLogInfo);
         methodLogInfo.log();
 
-        if (resultAndThrowable.throwable != null) {
-            throw resultAndThrowable.throwable;
+        if (resultAndThrowable.getThrowable() != null) {
+            throw resultAndThrowable.getThrowable();
         }
-        return resultAndThrowable.result;
+        return resultAndThrowable.getResult();
     }
 
     private ResultAndThrowable execute(ProceedingJoinPoint joinPoint) {
@@ -69,18 +65,18 @@ public class LogAspect {
     private void recordMethodExecuteInfo(ProceedingJoinPoint joinPoint, ResultAndThrowable resultAndThrowable, MethodLogInfo methodLogInfo) {
         methodLogInfo.setMethod(getMethod(joinPoint));
         methodLogInfo.setArgs(joinPoint.getArgs());
-        methodLogInfo.setResult(resultAndThrowable.result);
-        methodLogInfo.setThrowable(resultAndThrowable.throwable);
+        methodLogInfo.setResult(resultAndThrowable.getResult());
+        methodLogInfo.setThrowable(resultAndThrowable.getThrowable());
     }
 
     private boolean enableAfter(MethodLog methodLogAnno, ResultAndThrowable resultAndThrowable, long costMills) {
         if (costMills > methodLogAnno.costMillsThreshold()) {
             return true;
         }
-        if (resultAndThrowable.throwable != null && methodLogAnno.logWhenException()) {
+        if (resultAndThrowable.getThrowable() != null && methodLogAnno.logWhenException()) {
             return true;
         }
-        return methodLogAnno.resultCondition().match(resultAndThrowable.result);
+        return methodLogAnno.resultCondition().match(resultAndThrowable.getResult());
     }
 
     private boolean enableBefore(ProceedingJoinPoint joinPoint) {
@@ -113,23 +109,5 @@ public class LogAspect {
 
     private Method getMethod(ProceedingJoinPoint joinPoint) {
         return ReflectionUtil.getMethod(joinPoint);
-    }
-
-    private static class ResultAndThrowable {
-        Object result;
-        Throwable throwable;
-
-        public ResultAndThrowable(Object result, Throwable throwable) {
-            this.result = result;
-            this.throwable = throwable;
-        }
-
-        public static ResultAndThrowable result(Object result) {
-            return new ResultAndThrowable(result, null);
-        }
-
-        public static ResultAndThrowable throwable(Throwable throwable) {
-            return new ResultAndThrowable(null, throwable);
-        }
     }
 }
