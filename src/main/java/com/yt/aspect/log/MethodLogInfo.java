@@ -17,11 +17,12 @@ public class MethodLogInfo {
     private static final String NEXT_LINE = "\r\n";
     private static final String TITLE_TEMPLATE =
             StrUtil.repeat(FILL_SYMBOL, HALF_TITLE_LENGTH) + " {} " + StrUtil.repeat(FILL_SYMBOL, HALF_TITLE_LENGTH) + NEXT_LINE +
-                    "{}    {}" + NEXT_LINE +
+                    "{}    {}    {}" + NEXT_LINE +
                     StrUtil.repeat(FILL_SYMBOL, HALF_TITLE_LENGTH) + "{}" + StrUtil.repeat(FILL_SYMBOL, HALF_TITLE_LENGTH);
 
     private static final Gson gson = new Gson();
 
+    private Long uid;
     private Boolean enable;
     private Long startTime;
     private Long endTime;
@@ -73,7 +74,7 @@ public class MethodLogInfo {
     /**
      * 类似：
      * <br>==================MethodLogInfo==================
-     * <br>MethodLogInfo    log
+     * <br>MethodLogInfo    log    10086
      * <br>=================================================
      */
     private String title() {
@@ -81,6 +82,7 @@ public class MethodLogInfo {
                 className(),
                 method.getDeclaringClass().getSimpleName(),
                 method.getName(),
+                uid,
                 StrUtil.repeat(FILL_SYMBOL, className().length() + 2));
     }
 

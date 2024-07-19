@@ -26,11 +26,17 @@ public class LogAspect {
 
     @Around("pointcut()")
     public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
-        if (!enableBefore(joinPoint)) {
+        MethodLogInfo methodLogInfo = new MethodLogInfo();
+        recordVisitor(methodLogInfo);
+        if (!enableBefore(joinPoint, methodLogInfo)) {
             return joinPoint.proceed();
         }
 
-        return doAround(joinPoint, new MethodLogInfo());
+        return doAround(joinPoint, methodLogInfo);
+    }
+
+    private void recordVisitor(MethodLogInfo methodLogInfo) {
+        methodLogInfo.setUid(getUid());
     }
 
     private Object doAround(ProceedingJoinPoint joinPoint, MethodLogInfo methodLogInfo) throws Throwable {
@@ -55,7 +61,7 @@ public class LogAspect {
 
     private void recordAfter(ProceedingJoinPoint joinPoint, ResultAndThrowable resultAndThrowable, MethodLogInfo methodLogInfo) {
         methodLogInfo.end();
-        methodLogInfo.setEnable(enableAfter(getAnno(joinPoint), resultAndThrowable, methodLogInfo.costMills()));
+        methodLogInfo.setEnable(enableAfter(getAnno(joinPoint), resultAndThrowable, methodLogInfo));
         if (!methodLogInfo.getEnable()) {
             return;
         }
@@ -69,11 +75,11 @@ public class LogAspect {
         methodLogInfo.setThrowable(resultAndThrowable.getThrowable());
     }
 
-    private boolean enableAfter(MethodLog methodLogAnno, ResultAndThrowable resultAndThrowable, long costMills) {
-        if (properties.inUids(getUid())) {
+    private boolean enableAfter(MethodLog methodLogAnno, ResultAndThrowable resultAndThrowable, MethodLogInfo methodLogInfo) {
+        if (properties.inUids(methodLogInfo.getUid())) {
             return true;
         }
-        if (costMills > methodLogAnno.costMillsThreshold()) {
+        if (methodLogInfo.costMills() > methodLogAnno.costMillsThreshold()) {
             return true;
         }
         if (resultAndThrowable.getThrowable() != null && methodLogAnno.logWhenException()) {
@@ -82,12 +88,12 @@ public class LogAspect {
         return methodLogAnno.resultCondition().match(resultAndThrowable.getResult());
     }
 
-    private boolean enableBefore(ProceedingJoinPoint joinPoint) {
-        return mainSwitchOn() && mightHitCondition(getAnno(joinPoint));
+    private boolean enableBefore(ProceedingJoinPoint joinPoint, MethodLogInfo methodLogInfo) {
+        return mainSwitchOn() && mightHitCondition(getAnno(joinPoint), methodLogInfo.getUid());
     }
 
-    private boolean mightHitCondition(MethodLog anno) {
-        return properties.inUids(getUid())
+    private boolean mightHitCondition(MethodLog anno, Long uid) {
+        return properties.inUids(uid)
                 || anno.logWhenException()
                 || anno.costMillsThreshold() < Long.MAX_VALUE
                 || anno.resultCondition() != MethodLog.ResultCondition.NO;

@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 
 /**
  * <p>打印方法相关日志</p>
- * <p>具体包括：时间，入参，返回值，异常信息</p>
+ * <p>具体包括：访问人，方法时间相关，入参，返回值，异常信息</p>
  * <p>另有配置见 {@code MethodLogProperties}</p>
  * <br>注意：
  * 不支持多线程
