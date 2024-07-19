@@ -43,7 +43,7 @@ public class LogInfo {
             return;
         }
         String logStr = joinMultiLog(title(), customInfo(), fixedInfo());
-        log.info(LogUtil.desensitize(NEXT_LINE + logStr));
+        log.info(NEXT_LINE + logStr);
     }
 
     private String customInfo() {
