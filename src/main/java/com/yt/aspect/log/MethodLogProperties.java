@@ -3,18 +3,18 @@ package com.yt.aspect.log;
 import com.google.common.collect.Sets;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 
 import java.util.Set;
 
 @Data
-@Component
+@RefreshScope
 @ConfigurationProperties(prefix = "yt-method-log")
 public class MethodLogProperties {
     /**
      * 方法日志总开关
      */
-    private Boolean enable = false;
+    private Boolean enable;
     /**
      * 命中指定用户时打印方法日志
      */
