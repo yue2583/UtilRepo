@@ -47,12 +47,7 @@ public class MethodLogInfo {
         if (!enable) {
             return;
         }
-        log.info(title() + NEXT_LINE +
-                time() + NEXT_LINE +
-                args() + NEXT_LINE +
-                result() + NEXT_LINE +
-                throwable()
-        );
+        log.info(title() + time() + args() + result() + throwable());
     }
 
     private String result() {
@@ -60,11 +55,14 @@ public class MethodLogInfo {
     }
 
     private String throwable() {
+        if (throwable == null) {
+            return "";
+        }
         return StrUtil.format("异常：{}", LogUtil.logThrowable(throwable));
     }
 
     private String time() {
-        return StrUtil.format("耗时：{}ms     开始时间：{} 结束时间：{}", costMills(), startTime, endTime);
+        return StrUtil.format("耗时：{}ms     开始时间：{} 结束时间：{}", costMills(), startTime, endTime) + NEXT_LINE;
     }
 
     private String args() {
@@ -83,7 +81,7 @@ public class MethodLogInfo {
                 method.getDeclaringClass().getSimpleName(),
                 method.getName(),
                 uid,
-                StrUtil.repeat(FILL_SYMBOL, className().length() + 2));
+                StrUtil.repeat(FILL_SYMBOL, className().length() + 2)) + NEXT_LINE;
     }
 
     private String className() {

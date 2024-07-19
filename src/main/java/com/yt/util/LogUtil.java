@@ -8,6 +8,9 @@ public abstract class LogUtil {
     private static final String NEXT_LINE = "\r\n";
 
     public static String logThrowable(Throwable t) {
+        if (t == null) {
+            return "";
+        }
         return t.getMessage() + NEXT_LINE + formatStackTrace(t.getStackTrace());
     }
 
