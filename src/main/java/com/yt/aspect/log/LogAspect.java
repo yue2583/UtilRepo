@@ -3,20 +3,19 @@ package com.yt.aspect.log;
 
 import com.yt.common.ResultAndThrowable;
 import com.yt.util.ReflectionUtil;
-import lombok.AllArgsConstructor;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 
 import java.lang.reflect.Method;
+import java.util.List;
 
 
 @Aspect
-@AllArgsConstructor
 public class LogAspect {
 
-    private final MethodLogProperties properties;
+    LogConfiguration configuration;
 
     @Pointcut("@annotation(com.yt.aspect.log.MethodLog)")
     public void pointcut() {
@@ -24,24 +23,34 @@ public class LogAspect {
 
     @Around("pointcut()")
     public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
-        MethodLogInfo methodLogInfo = new MethodLogInfo();
-        recordVisitor(methodLogInfo);
-        if (!enableBefore(joinPoint, methodLogInfo)) {
+        LogInfo logInfo = new LogInfo();
+        boolean customLogCondition = customLogCondition();
+        boolean mightAnnoCondition = mightAnnoCondition(joinPoint);
+        boolean enable = mightAnnoCondition || customLogCondition;
+        if (!enable) {
             return joinPoint.proceed();
         }
-
-        return doAround(joinPoint, methodLogInfo);
+        return doAround(joinPoint, logInfo, customLogCondition);
     }
 
-    private void recordVisitor(MethodLogInfo methodLogInfo) {
-        methodLogInfo.setUid(getUid());
+    private boolean customLogCondition() {
+        List<LogCondition> customLogConditions = configuration.customLogConditions;
+        if (customLogConditions == null) {
+            return false;
+        }
+        for (LogCondition logCondition : customLogConditions) {
+            if (logCondition.isTrue()) {
+                return true;
+            }
+        }
+        return false;
     }
 
-    private Object doAround(ProceedingJoinPoint joinPoint, MethodLogInfo methodLogInfo) throws Throwable {
-        recordBefore(methodLogInfo);
+    private Object doAround(ProceedingJoinPoint joinPoint, LogInfo logInfo, boolean customLogCondition) throws Throwable {
+        recordBefore(logInfo);
         ResultAndThrowable resultAndThrowable = execute(joinPoint);
-        recordAfter(joinPoint, resultAndThrowable, methodLogInfo);
-        methodLogInfo.log();
+        recordAfter(joinPoint, resultAndThrowable, logInfo, customLogCondition);
+        logInfo.log();
 
         if (resultAndThrowable.getThrowable() != null) {
             throw resultAndThrowable.getThrowable();
@@ -57,27 +66,33 @@ public class LogAspect {
         }
     }
 
-    private void recordAfter(ProceedingJoinPoint joinPoint, ResultAndThrowable resultAndThrowable, MethodLogInfo methodLogInfo) {
-        methodLogInfo.end();
-        methodLogInfo.setEnable(enableAfter(getAnno(joinPoint), resultAndThrowable, methodLogInfo));
-        if (!methodLogInfo.getEnable()) {
+    private void recordAfter(ProceedingJoinPoint joinPoint, ResultAndThrowable resultAndThrowable, LogInfo logInfo, boolean customLogCondition) {
+        logInfo.end();
+        logInfo.setEnable(isEnableLog(joinPoint, resultAndThrowable, logInfo, customLogCondition));
+        if (!logInfo.getEnable()) {
             return;
         }
-        recordMethodExecuteInfo(joinPoint, resultAndThrowable, methodLogInfo);
+        recordMethodExecuteInfo(joinPoint, resultAndThrowable, logInfo);
     }
 
-    private void recordMethodExecuteInfo(ProceedingJoinPoint joinPoint, ResultAndThrowable resultAndThrowable, MethodLogInfo methodLogInfo) {
-        methodLogInfo.setMethod(getMethod(joinPoint));
-        methodLogInfo.setArgs(joinPoint.getArgs());
-        methodLogInfo.setResult(resultAndThrowable.getResult());
-        methodLogInfo.setThrowable(resultAndThrowable.getThrowable());
+    private void recordMethodExecuteInfo(ProceedingJoinPoint joinPoint, ResultAndThrowable resultAndThrowable, LogInfo logInfo) {
+        logInfo.setMethod(getMethod(joinPoint));
+        logInfo.setArgs(joinPoint.getArgs());
+        logInfo.setResult(resultAndThrowable.getResult());
+        logInfo.setThrowable(resultAndThrowable.getThrowable());
+        recordCustomLogInfo(logInfo);
     }
 
-    private boolean enableAfter(MethodLog methodLogAnno, ResultAndThrowable resultAndThrowable, MethodLogInfo methodLogInfo) {
-        if (properties.inUids(methodLogInfo.getUid())) {
+    private void recordCustomLogInfo(LogInfo logInfo) {
+        logInfo.setCustomLogInfos(configuration.customLogInfoItems);
+    }
+
+    private boolean isEnableLog(ProceedingJoinPoint joinPoint, ResultAndThrowable resultAndThrowable, LogInfo logInfo, boolean customLogCondition) {
+        if (customLogCondition) {
             return true;
         }
-        if (methodLogInfo.costMills() > methodLogAnno.costMillsThreshold()) {
+        MethodLog methodLogAnno = getAnno(joinPoint);
+        if (logInfo.costMills() > methodLogAnno.costMillsThreshold()) {
             return true;
         }
         if (resultAndThrowable.getThrowable() != null && methodLogAnno.logWhenException()) {
@@ -86,28 +101,15 @@ public class LogAspect {
         return methodLogAnno.resultCondition().match(resultAndThrowable.getResult());
     }
 
-    private boolean enableBefore(ProceedingJoinPoint joinPoint, MethodLogInfo methodLogInfo) {
-        return mainSwitchOn() && mightHitCondition(getAnno(joinPoint), methodLogInfo.getUid());
-    }
-
-    private boolean mightHitCondition(MethodLog anno, Long uid) {
-        return properties.inUids(uid)
-                || anno.logWhenException()
+    private boolean mightAnnoCondition(ProceedingJoinPoint joinPoint) {
+        MethodLog anno = getAnno(joinPoint);
+        return anno.logWhenException()
                 || anno.costMillsThreshold() < Long.MAX_VALUE
                 || anno.resultCondition() != MethodLog.ResultCondition.NO;
     }
 
-    private boolean mainSwitchOn() {
-        return properties.enable();
-    }
-
-    private Long getUid() {
-        // todo 待实现
-        return null;
-    }
-
-    private void recordBefore(MethodLogInfo methodLogInfo) {
-        methodLogInfo.start();
+    private void recordBefore(LogInfo logInfo) {
+        logInfo.start();
     }
 
     private MethodLog getAnno(ProceedingJoinPoint joinPoint) {

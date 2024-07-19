@@ -9,6 +9,6 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@Import(MethodLogConfiguration.class)
+@Import(LogConfiguration.class)
 public @interface EnableMethodLog {
 }

@@ -6,12 +6,14 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * <p>打印方法相关日志</p>
- * <p>具体包括：访问人，方法时间相关，入参，返回值，异常信息</p>
- * <p>另有配置见 {@code MethodLogProperties}</p>
+ * 满足条件时打印方法相关日志
+ * <br>
+ * <br>打印的日志包括{方法执行时刻和耗时，方法入参，方法返回值，方法抛出的异常信息（如果有）}
+ * <br>自定义扩展见 LogConfiguration
+ * <br>
  * <br>注意：
- * 不支持多线程
- * 基于spring AOP，因此需要注入容器且方法为public
+ * <br>不支持多线程
+ * <br>基于spring AOP，因此需要注入容器 && 方法为public && 非方法内部调用
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
