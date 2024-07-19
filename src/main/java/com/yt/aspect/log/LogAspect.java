@@ -70,6 +70,9 @@ public class LogAspect {
     }
 
     private boolean enableAfter(MethodLog methodLogAnno, ResultAndThrowable resultAndThrowable, long costMills) {
+        if (properties.inUids(getUid())) {
+            return true;
+        }
         if (costMills > methodLogAnno.costMillsThreshold()) {
             return true;
         }
