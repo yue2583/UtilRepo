@@ -50,7 +50,7 @@ public class MethodLogInfo {
         if (!enable) {
             return;
         }
-        log.info(NEXT_LINE + format(title() + time() + args() + result() + throwable()));
+        log.info(NEXT_LINE + format(title(), time(), args(), result(), throwable()));
     }
 
     private String format(String... logs) {
