@@ -3,9 +3,9 @@ package com.yt.util;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-public abstract class LogUtil {
+import static com.yt.constant.StrConstant.NEXT_LINE;
 
-    private static final String NEXT_LINE = "\r\n";
+public abstract class LogUtil {
 
     public static String logThrowable(Throwable t) {
         if (t == null) {

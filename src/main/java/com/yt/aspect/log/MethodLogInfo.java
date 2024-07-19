@@ -8,13 +8,14 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
 
+import static com.yt.constant.StrConstant.NEXT_LINE;
+
 @Slf4j
 @Data
 public class MethodLogInfo {
 
     private static final String FILL_SYMBOL = "=";
     private static final int HALF_TITLE_LENGTH = 20;
-    private static final String NEXT_LINE = "\r\n";
     private static final String TITLE_TEMPLATE =
             StrUtil.repeat(FILL_SYMBOL, HALF_TITLE_LENGTH) + " {} " + StrUtil.repeat(FILL_SYMBOL, HALF_TITLE_LENGTH) + NEXT_LINE +
                     "{}    {}    {}" + NEXT_LINE +
