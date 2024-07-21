@@ -55,8 +55,8 @@ public class LogInfo {
         return showLogItem("自定义信息", joinMultiLog(customLogInfoStrArr));
     }
 
-    private String showLogItem(String label, String logInfo) {
-        return StrUtil.format("[{}] {}", label, logInfo);
+    private String showLogItem(String label, Object obj) {
+        return StrUtil.format(label, FORMATTER.format(obj));
     }
 
     private String fixedInfo() {
@@ -71,7 +71,7 @@ public class LogInfo {
     }
 
     private String result() {
-        return showLogItem("结果", FORMATTER.format(result));
+        return showLogItem("结果", result);
     }
 
     private String throwable() {
@@ -86,7 +86,7 @@ public class LogInfo {
     }
 
     private String args() {
-        return showLogItem("入参", FORMATTER.format(args));
+        return showLogItem("入参", args);
     }
 
     private String title() {
