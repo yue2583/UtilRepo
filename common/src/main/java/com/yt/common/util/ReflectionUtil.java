@@ -35,4 +35,12 @@ public abstract class ReflectionUtil {
         setAccessible(field);
         return field.get(obj);
     }
+
+    public static String getMethodName(ProceedingJoinPoint joinPoint) {
+        return getMethod(joinPoint).getName();
+    }
+
+    public static <T extends Annotation> boolean annoExist(ProceedingJoinPoint joinPoint, Class<T> anno) {
+        return getAnno(joinPoint, anno) != null;
+    }
 }
