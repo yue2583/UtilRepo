@@ -8,8 +8,8 @@ public class MethodCostTimeInfo {
 
     private String methodName;
     private String label;
-    private long startTime;
-    private long endTime;
+    private Long startTime;
+    private Long endTime;
     private Object args;
     private Object result;
 
