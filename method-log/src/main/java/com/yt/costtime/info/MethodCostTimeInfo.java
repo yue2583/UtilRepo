@@ -27,7 +27,7 @@ public class MethodCostTimeInfo {
 
     public void log() {
         String info = StrUtil.format(
-                "{} method: {}\n" +
+                "MCTI\n{}: {}\n" +
                         "cost {}ms\n" +
                         "args: {}\n" +
                         "result: {}",

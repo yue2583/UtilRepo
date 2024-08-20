@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 仅简单的记录某个方法耗时，并 log 入参和结果
+ * 仅简单的记录某个方法耗时，并 log 入参和结果，可使用MCTI查询日志
  * 使用 EnableCostTime 开启
  */
 @Target({ElementType.METHOD})
